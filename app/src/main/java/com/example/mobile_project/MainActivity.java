@@ -1,5 +1,7 @@
 package com.example.mobile_project;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -7,7 +9,10 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -44,6 +49,23 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewInter
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        //receive SMS permission
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.RECEIVE_SMS
+        ) != PackageManager.PERMISSION_GRANTED) {
+
+            smsPermissionLauncher.launch(Manifest.permission.RECEIVE_SMS);
+        }
+
+        //send SMS permission
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.SEND_SMS
+        ) != PackageManager.PERMISSION_GRANTED) {
+
+            sendSmsPermissionLauncher.launch(Manifest.permission.SEND_SMS);
+        }
     }
 
     @Override
@@ -64,8 +86,10 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewInter
         ArrayList<Contact> temp = helper.getAllContacts();
         for (int i = 0; i < temp.size(); i++) {
             Log.e("ID", String.valueOf(i));
-            Log.e("Name", temp.get(i).getName());
+            Log.e("Firstname", String.valueOf(temp.get(i).getFirstName()));
+            Log.e("Lastname", String.valueOf(temp.get(i).getLastName()));
             Log.e("Nickname", String.valueOf(temp.get(i).getNickName()));
+            Log.e("Country Code", String.valueOf(temp.get(i).getCountryCode()));
             Log.e("Phone", String.valueOf(temp.get(i).getPhone()));
             Log.e("Email", String.valueOf(temp.get(i).getEmail()));
             Log.e("Avatar", String.valueOf(temp.get(i).getAvatar()));
@@ -76,8 +100,10 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewInter
     @Override
     public void onItemClick(int position) {
         Intent intent = new Intent(MainActivity.this, MessagePage.class);
-        intent.putExtra("name", String.valueOf(contacts.get(position).getName()));
+        intent.putExtra("firstname", String.valueOf(contacts.get(position).getFirstName()));
+        intent.putExtra("lastname", String.valueOf(contacts.get(position).getLastName()));
         intent.putExtra("nickname", String.valueOf(contacts.get(position).getNickName()));
+        intent.putExtra("countryCode", String.valueOf(contacts.get(position).getCountryCode()));
         intent.putExtra("phone", String.valueOf(contacts.get(position).getPhone()));
         intent.putExtra("email", String.valueOf(contacts.get(position).getEmail()));
         intent.putExtra("avatar", String.valueOf(contacts.get(position).getAvatar()));
@@ -88,4 +114,27 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewInter
     public void onItemLongClick(int position) {
 
     }
+
+    private final ActivityResultLauncher<String> smsPermissionLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.RequestPermission(),
+                    isGranted -> {
+                        if (isGranted) {
+                            Log.d("SMS", "Permission granted");
+                        } else {
+                            Log.d("SMS", "Permission denied");
+                        }
+                    }
+            );
+    private final ActivityResultLauncher<String> sendSmsPermissionLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.RequestPermission(),
+                    isGranted -> {
+                        if (isGranted) {
+                            Log.d("SMS", "SEND_SMS permission granted");
+                        } else {
+                            Log.d("SMS", "SEND_SMS permission denied");
+                        }
+                    }
+            );
 }

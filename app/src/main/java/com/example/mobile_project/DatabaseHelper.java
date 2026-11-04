@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -17,6 +18,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String CONTACT_COLUMN_ID = "id";
     public static final String CONTACT_COLUMN_FIRST_NAME = "first_name";
     public static final String CONTACT_COLUMN_LAST_NAME = "last_name";
+    public static final String CONTACT_COLUMN_COUNTRY_CODE = "country_code";
     public static final String CONTACT_COLUMN_PHONE = "phone";
     public static final String CONTACT_COLUMN_EMAIL = "email";
     public static final String CONTACT_COLUMN_NICKNAME = "nickname";
@@ -28,6 +30,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String MESSAGE_COLUMN_TIMESTAMP = "timestamp";
     public static final String MESSAGE_COLUMN_IS_SENT = "is_sent";
     public static final String MESSAGE_COLUMN_CONTACT_NAME = "contact_name";
+    public static final String MESSAGE_COLUMN_MESSAGE_STATUS = "message_status";
 
 
 
@@ -42,6 +45,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 CONTACT_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 CONTACT_COLUMN_FIRST_NAME + " TEXT," +
                 CONTACT_COLUMN_LAST_NAME + " TEXT," +
+                CONTACT_COLUMN_COUNTRY_CODE + " TEXT," +
                 CONTACT_COLUMN_PHONE + " TEXT," +
                 CONTACT_COLUMN_EMAIL + " TEXT," +
                 CONTACT_COLUMN_NICKNAME + " TEXT," +
@@ -55,6 +59,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 MESSAGE_COLUMN_TIMESTAMP + " INTEGER NOT NULL," +
                 MESSAGE_COLUMN_IS_SENT + " INTEGER NOT NULL," +
                 MESSAGE_COLUMN_CONTACT_NAME + " TEXT NOT NULL," +
+                MESSAGE_COLUMN_MESSAGE_STATUS + " TEXT NOT NULL," +
                 "FOREIGN KEY(" + MESSAGE_COLUMN_CONTACT_ID + ") REFERENCES " +
                 TABLE_NAME_CONTACTS + "(" + CONTACT_COLUMN_ID + ")" +
                 ")";
@@ -74,13 +79,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
 
-    public long insertContact(String firstName, String lastName, String phone, String email, String nickname, String avatar) {
-        if (firstName == null || lastName == null || phone == null)
+    public long insertContact(String firstName, String lastName,String countryCode, String phone, String email, String nickname, String avatar) {
+        if (phone == null)
             return -1;
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("first_name", firstName);
         values.put("last_name", lastName);
+        values.put("country_code", countryCode);
         values.put("phone", phone);
         values.put("email", email);
         values.put("nickname", nickname);
@@ -99,11 +105,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             int id = cursor.getInt(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_ID));
             String firstName = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_FIRST_NAME));
             String lastName = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_LAST_NAME));
+            String countryCode = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_COUNTRY_CODE));
             String phone = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_PHONE));
             String email = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_EMAIL));
             String nickname = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_NICKNAME));
             String avatar = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_AVATAR));
-            contacts.add(new Contact(firstName + " " + lastName, nickname, phone, email, avatar));
+            contacts.add(new Contact(firstName, lastName, nickname, countryCode, phone, email, avatar));
         }
         cursor.close();
         db.close();
@@ -118,39 +125,41 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         if (cursor.moveToFirst()) {
             String firstName = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_FIRST_NAME));
             String lastName = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_LAST_NAME));
+            String countryCode = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_COUNTRY_CODE));
             String phone = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_PHONE));
             String email = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_EMAIL));
             String nickname = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_NICKNAME));
             String avatar = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_AVATAR));
             if (firstName != null && lastName != null && phone != null)
-                contact = new Contact(firstName + " " + lastName, nickname, phone, email, avatar);
+                contact = new Contact(firstName, lastName, nickname, countryCode, phone, email, avatar);
         }
         cursor.close();
         db.close();
         return contact;
     }
 
-    public Contact getContactByNumber(String number) {
+    public Contact getContactByNumber(String countryCode, String number) {
         Contact contact = null;
         SQLiteDatabase db = getReadableDatabase();
-        String query = "SELECT * FROM contacts WHERE phone = ?";
-        android.database.Cursor cursor = db.rawQuery(query, new String[]{number});
+        String query = "SELECT * FROM contacts WHERE country_code = ? AND phone = ?";
+        android.database.Cursor cursor = db.rawQuery(query, new String[]{countryCode, number});
         if (cursor.moveToFirst()) {
             String firstName = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_FIRST_NAME));
             String lastName = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_LAST_NAME));
+            String countryCode1 = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_COUNTRY_CODE));
             String phone = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_PHONE));
             String email = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_EMAIL));
             String nickname = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_NICKNAME));
             String avatar = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_AVATAR));
-            contact = new Contact(firstName + " " + lastName, nickname, phone, email, avatar);
+            contact = new Contact(firstName, lastName, nickname, countryCode1, phone, email, avatar);
         }
         return contact;
     }
 
-    public int getContactIdByNumber(String number) {
+    public int getContactIdByNumber(String countryCode, String number) {
         SQLiteDatabase db = getReadableDatabase();
-        String query = "SELECT id FROM contacts WHERE phone = ?";
-        android.database.Cursor cursor = db.rawQuery(query, new String[]{number});
+        String query = "SELECT id FROM contacts WHERE country_code = ? AND phone = ?";
+        android.database.Cursor cursor = db.rawQuery(query, new String[]{countryCode, number});
         int id = -1;
         if (cursor.moveToFirst()) {
             id = cursor.getInt(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_ID));
@@ -160,11 +169,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return id;
     }
 
-    public int updateContact(long id, String firstName, String lastName, String phone, String email, String nickname, String avatar) {
+    public int updateContact(long id, String firstName, String lastName,String countryCode, String phone, String email, String nickname, String avatar) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(CONTACT_COLUMN_FIRST_NAME, firstName);
         values.put(CONTACT_COLUMN_LAST_NAME, lastName);
+        values.put(CONTACT_COLUMN_COUNTRY_CODE, countryCode);
         values.put(CONTACT_COLUMN_PHONE, phone);
         values.put(CONTACT_COLUMN_EMAIL, email);
         values.put(CONTACT_COLUMN_NICKNAME, nickname);
@@ -192,11 +202,45 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             long timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_TIMESTAMP));
             boolean isSent = cursor.getInt(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_IS_SENT)) == 1;
             String contactName = cursor.getString(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_CONTACT_NAME));
-            Message temp = new Message(isSent, timestamp, content, contactName);
+            String messageStatus = cursor.getString(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_MESSAGE_STATUS));
+            Message temp = new Message(isSent, timestamp, content, contactName, messageStatus);
             messages.add(temp);
         }
         cursor.close();
         db.close();
         return messages;
+    }
+
+    public void insertMessage(long contactId, String content, long timestamp, boolean isSent, String contactName, String messageStatus) {
+        SQLiteDatabase db = getWritableDatabase();
+        String query = "INSERT INTO messages (contact_id, content, timestamp, is_sent, contact_name, message_status) VALUES (?, ?, ?, ?, ?, ?)";
+        db.execSQL(query, new String[]{String.valueOf(contactId), content, String.valueOf(timestamp), String.valueOf(isSent ? 1 : 0), contactName, messageStatus});
+        db.close();
+    }
+
+    public int getMessageIdByContactIdTimestamp(long contactId, long timestamp) {
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT id FROM messages WHERE contact_id = ? AND timestamp = ?";
+        android.database.Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(contactId), String.valueOf(timestamp)});
+        int id = -1;
+        if (cursor.moveToFirst()) {
+            id = cursor.getInt(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_ID));
+        }
+        cursor.close();
+        db.close();
+        return id;
+    }
+
+    public void updateMessageStatus(long messageId, String newStatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("status", newStatus);
+        int rowsAffected = db.update(
+                "messages",
+                values,
+                "id = ?",
+                new String[]{String.valueOf(messageId)}
+        );
+        Log.d("DATABASE", "Updated rows: " + rowsAffected);
     }
 }

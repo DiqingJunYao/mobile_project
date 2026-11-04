@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class AddContactActivity extends AppCompatActivity {
@@ -54,7 +55,7 @@ public class AddContactActivity extends AppCompatActivity {
         animationDrawable.setExitFadeDuration(5000);
         animationDrawable.start();
 
-        //
+        //avatar pic
         contactAvatar = findViewById(R.id.avatar);
         photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(),
             uri -> {
@@ -83,45 +84,87 @@ public class AddContactActivity extends AppCompatActivity {
             }
         });
 
-        //add Contact button
         Button addContactButton = findViewById(R.id.addContactButton);
         EditText inputFirstName = findViewById(R.id.inputFirstName);
         EditText inputLastName = findViewById(R.id.inputLastName);
         EditText inputEmail = findViewById(R.id.inputEmail);
         EditText inputNickname = findViewById(R.id.inputNickname);
         EditText inputPhoneNumber = findViewById(R.id.inputPhoneNumber);
+        //Intent coming in
+        Intent intent = getIntent();
+        if (intent != null) {
+            String firstname = intent.getStringExtra("firstname");
+            String lastname = intent.getStringExtra("lastname");
+            String nameShow = firstname + " " + lastname;
+            String nicknameShow = intent.getStringExtra("nickname");
+            String countryCodeShow = intent.getStringExtra("countryCode");
+            String phoneShow = intent.getStringExtra("phone");
+            String emailShow = intent.getStringExtra("email");
+            String avatarShow = intent.getStringExtra("avatar");
+            inputFirstName.setText(firstname);
+            inputLastName.setText(lastname);
+            selectCountryNumber.setText(countryCodeShow);
+            inputPhoneNumber.setText(phoneShow);
+            inputEmail.setText(emailShow);
+            inputNickname.setText(nicknameShow);
 
-        addContactButton.setOnClickListener(v -> {
-            dbHelper = new DatabaseHelper(this);
-            String firstName = inputFirstName.getText().toString();
-            String lastName = inputLastName.getText().toString();
-            String email = inputEmail.getText().toString();
-            String nickname = inputNickname.getText().toString();
-            String countryCode = selectCountryNumber.getText().toString();
-            String phoneNumber = inputPhoneNumber.getText().toString();
-            String phone = countryCode + phoneNumber;
+            addContactButton.setOnClickListener(v -> {
+                dbHelper = new DatabaseHelper(this);
+                String firstName = inputFirstName.getText().toString();
+                String lastName = inputLastName.getText().toString();
+                String email = inputEmail.getText().toString();
+                String nickname = inputNickname.getText().toString();
+                String countryCode = selectCountryNumber.getText().toString();
+                String phoneNumber = inputPhoneNumber.getText().toString();
+                String phone = countryCode + phoneNumber;
 
-            String avatarFilename = null;
+                String avatarFilename = null;
 
-            if (selectedAvatarUri != null) {
-                avatarFilename = saveAvatar(selectedAvatarUri);
-                if (avatarFilename == null) {
+                if (selectedAvatarUri != null) {
+                    avatarFilename = saveAvatar(selectedAvatarUri);
+                    if (avatarFilename == null) {
+                        return;
+                    }
+                }
+                int id = dbHelper.getContactIdByNumber(countryCode, phoneNumber);
+                Log.e("all info", phoneNumber);
+                long result = dbHelper.updateContact(id, firstName, lastName, countryCode, phoneNumber, email, nickname, avatarFilename);
+                if (result == -1) {
+                    Log.e("AddContactActivity", "Contact not update: " + firstName + " " + lastName + " " + phone + " " + email + " " + nickname + " " + avatarFilename);
                     return;
                 }
-            }
+                Log.e("AddContactActivity", "Contact update: " + firstName + " " + lastName + " " + phone + " " + email + " " + nickname + " " + avatarFilename);
+                finish();
+            });
+        } else {
+            //add Contact button
+            addContactButton.setOnClickListener(v -> {
+                dbHelper = new DatabaseHelper(this);
+                String firstName = inputFirstName.getText().toString();
+                String lastName = inputLastName.getText().toString();
+                String email = inputEmail.getText().toString();
+                String nickname = inputNickname.getText().toString();
+                String countryCode = selectCountryNumber.getText().toString();
+                String phoneNumber = inputPhoneNumber.getText().toString();
+                String phone = countryCode + phoneNumber;
 
-            if (firstName.isEmpty() || lastName.isEmpty() || email.isEmpty() || nickname.isEmpty() || phone.isEmpty()) {
-                Log.e("AddContactActivity", "Contact not added: " + firstName + " " + lastName + " " + phone + " " + email + " " + nickname);
-                return;
-            }
-            long result = dbHelper.insertContact(firstName, lastName, phone, email, nickname, avatarFilename);
-            if (result == -1) {
-                Log.e("AddContactActivity", "Contact not added: " + firstName + " " + lastName + " " + phone + " " + email + " " + nickname + " " + avatarFilename);
-                return;
-            }
-            Log.e("AddContactActivity", "Contact added: " + firstName + " " + lastName + " " + phone + " " + email + " " + nickname + " " + avatarFilename);
-            finish();
-        });
+                String avatarFilename = null;
+
+                if (selectedAvatarUri != null) {
+                    avatarFilename = saveAvatar(selectedAvatarUri);
+                    if (avatarFilename == null) {
+                        return;
+                    }
+                }
+                long result = dbHelper.insertContact(firstName, lastName, countryCode, phone, email, nickname, avatarFilename);
+                if (result == -1) {
+                    Log.e("AddContactActivity", "Contact not added: " + firstName + " " + lastName + " " + phone + " " + email + " " + nickname + " " + avatarFilename);
+                    return;
+                }
+                Log.e("AddContactActivity", "Contact added: " + firstName + " " + lastName + " " + phone + " " + email + " " + nickname + " " + avatarFilename);
+                finish();
+            });
+        }
 
     }
 

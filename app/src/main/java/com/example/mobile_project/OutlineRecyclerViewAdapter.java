@@ -38,7 +38,8 @@ public class OutlineRecyclerViewAdapter extends RecyclerView.Adapter<OutlineRecy
 
     @Override
     public void onBindViewHolder(@NonNull OutlineRecyclerViewAdapter.MyViewHolder holder, int position) {
-        holder.title.setText(contacts.get(position).getName());
+        String name = contacts.get(position).getFirstName() + " " + contacts.get(position).getLastName();
+        holder.title.setText(name);
         holder.detail.setText(contacts.get(position).getNickName());
         // Set the image using the avatar filename
         Contact contact = contacts.get(position);

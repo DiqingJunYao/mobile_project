@@ -17,22 +17,20 @@ import java.util.Locale;
 public class MessagePageRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     Context context;
     ArrayList<Message> messages;
-    private final RecyclerViewInterface recyclerViewInterface;
     private static final int TYPE_IN = 0;
     private static final int TYPE_OUT = 1;
 
-    public MessagePageRecyclerViewAdapter(Context context, ArrayList<Message> messages, RecyclerViewInterface recyclerViewInterface) {
+    public MessagePageRecyclerViewAdapter(Context context, ArrayList<Message> messages) {
         this.context = context;
         this.messages = messages;
-        this.recyclerViewInterface = recyclerViewInterface;
     }
 
     @Override
     public int getItemViewType(int position) {
         if (messages.get(position).isSent()) {
-            return TYPE_IN;
-        } else {
             return TYPE_OUT;
+        } else {
+            return TYPE_IN;
         }
     }
 
@@ -44,26 +42,23 @@ public class MessagePageRecyclerViewAdapter extends RecyclerView.Adapter<Recycle
 
         if (viewType == TYPE_IN) {
             View view = layoutInflater.inflate(R.layout.recycler_view_message_in, parent, false);
-            return new MyViewHolderIn(view, recyclerViewInterface);
+            return new MyViewHolderIn(view);
         } else {
             View view = layoutInflater.inflate(R.layout.recycler_view_message_out, parent, false);
-            return new MyViewHolderOut(view, recyclerViewInterface);
+            return new MyViewHolderOut(view);
         }
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        long timestamp = messages.get(position).getTimestamp();
+        SimpleDateFormat formatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        String time = formatter.format(new Date(timestamp));
         if (holder instanceof MyViewHolderIn) {
             ((MyViewHolderIn) holder).content.setText(messages.get(position).getContent());
-            long timestamp = messages.get(position).getTimestamp();
-            SimpleDateFormat formatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
-            String time = formatter.format(new Date(timestamp));
             ((MyViewHolderIn) holder).timeStamp.setText(time);
         } else if (holder instanceof MyViewHolderOut) {
             ((MyViewHolderOut) holder).content.setText(messages.get(position).getContent());
-            long timestamp = messages.get(position).getTimestamp();
-            SimpleDateFormat formatter = new SimpleDateFormat("HH:mm", Locale.getDefault());
-            String time = formatter.format(new Date(timestamp));
             ((MyViewHolderOut) holder).timeStamp.setText(time);
         }
     }
@@ -77,7 +72,7 @@ public class MessagePageRecyclerViewAdapter extends RecyclerView.Adapter<Recycle
         TextView content;
         TextView timeStamp;
 
-        public MyViewHolderIn(@NonNull View itemViewIn, RecyclerViewInterface recyclerViewInterface) {
+        public MyViewHolderIn(@NonNull View itemViewIn) {
             super(itemViewIn);
             content = itemViewIn.findViewById(R.id.textContentIn);
             timeStamp = itemViewIn.findViewById(R.id.textTimeIn);
@@ -88,7 +83,7 @@ public class MessagePageRecyclerViewAdapter extends RecyclerView.Adapter<Recycle
         TextView content;
         TextView timeStamp;
 
-        public MyViewHolderOut(@NonNull View itemViewOut, RecyclerViewInterface recyclerViewInterface) {
+        public MyViewHolderOut(@NonNull View itemViewOut) {
             super(itemViewOut);
             content = itemViewOut.findViewById(R.id.textContentOut);
             timeStamp = itemViewOut.findViewById(R.id.textTimeOut);

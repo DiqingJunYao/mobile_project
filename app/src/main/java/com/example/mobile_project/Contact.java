@@ -5,28 +5,36 @@ import android.content.Context;
 import java.io.File;
 
 public class Contact {
-    String name;
+    String firstName;
+    String lastName;
     String nickName;
+    String countryCode;
     String phone;
     String email;
     String avatar;
 
 
-    public Contact(String name, String nickName, String phone, String email, String avatar) {
-        this.name = name;
+    public Contact(String firstName, String lastName,  String nickName, String countryCode, String phone, String email, String avatar) {
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.nickName = nickName;
+        this.countryCode = countryCode;
         this.phone = phone;
         this.email = email;
         this.avatar = avatar;
     }
 
-    public String getName() {
-        return name;
+    public String getFirstName() {
+        return firstName;
     }
+
+    public String getLastName(){ return lastName; }
 
     public String getNickName() {
         return nickName;
     }
+
+    public String getCountryCode() { return countryCode; }
 
     public String getPhone() {
         return phone;

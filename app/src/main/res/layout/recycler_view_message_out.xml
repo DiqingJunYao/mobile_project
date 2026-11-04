@@ -25,7 +25,7 @@
             android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/countryNativeName"
+                android:id="@+id/textTimeOut"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="top|start"
@@ -35,7 +35,7 @@
                 android:textSize="15sp" />
 
             <TextView
-                android:id="@+id/countryName"
+                android:id="@+id/textContentOut"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:text="China"
