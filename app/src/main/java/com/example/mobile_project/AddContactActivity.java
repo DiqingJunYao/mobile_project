@@ -1,25 +1,18 @@
 package com.example.mobile_project;
 
-
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.AnimationDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ScrollView;
-
-import androidx.activity.EdgeToEdge;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.PickVisualMediaRequest;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -27,71 +20,60 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
-public class AddContactActivity extends AppCompatActivity {
-    ActivityResultLauncher<Intent> countryLauncher;
-    private DatabaseHelper dbHelper;
+public class AddContactActivity extends Activity {
 
+    private static final int REQUEST_COUNTRY = 100;
+    private static final int REQUEST_AVATAR = 101;
+
+    private DatabaseHelper dbHelper;
     private ImageView contactAvatar;
-    private ActivityResultLauncher<PickVisualMediaRequest> photoPickerLauncher;
+    private Button selectCountryNumber;
     private Uri selectedAvatarUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+
         setContentView(R.layout.activity_add_contact);
-        ScrollView scrollView = findViewById(R.id.addContactScrollView);
-        ViewCompat.setOnApplyWindowInsetsListener(scrollView, (view, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
-            int bottomPadding = Math.max(systemBars.bottom, ime.bottom);
-            view.setPadding(systemBars.left, systemBars.top, systemBars.right, bottomPadding);
-            return insets;
-        });
 
-        //background animation
-        ConstraintLayout main = findViewById(R.id.main);
-        AnimationDrawable animationDrawable = (AnimationDrawable) main.getBackground();
-        animationDrawable.setEnterFadeDuration(2500);
-        animationDrawable.setExitFadeDuration(5000);
-        animationDrawable.start();
+        dbHelper = new DatabaseHelper(this);
 
-        //avatar pic
+        // Handle system bars and keyboard using framework APIs.
+        setupWindowInsets();
+
+        // Background animation.
+        View main = findViewById(R.id.main);
+        if (main.getBackground() instanceof AnimationDrawable) {
+            AnimationDrawable animationDrawable =
+                    (AnimationDrawable) main.getBackground();
+            animationDrawable.setEnterFadeDuration(2500);
+            animationDrawable.setExitFadeDuration(5000);
+            animationDrawable.start();
+        }
+
+        // Avatar.
         contactAvatar = findViewById(R.id.avatar);
-        photoPickerLauncher = registerForActivityResult(new ActivityResultContracts.PickVisualMedia(),
-            uri -> {
-                if (uri != null) {
-                    selectedAvatarUri = uri;
-                    contactAvatar.setImageURI(uri);
-                }
-            }
-        );
-        contactAvatar.setOnClickListener(v -> photoPickerLauncher.launch(new PickVisualMediaRequest.Builder().setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE).build()));
+        contactAvatar.setOnClickListener(v -> openAvatarPicker());
 
-        //back button
+        // Buttons.
         Button backButton = findViewById(R.id.backButton);
-        //select country code
-        Button selectCountryNumber = findViewById(R.id.selectCountryNumber);
-        selectCountryNumber.setOnClickListener(v -> {
-            Intent intent = new Intent(AddContactActivity.this, CountrySelection.class);
-            countryLauncher.launch(intent);
-        });
-        countryLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-            if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                String dialCode = result.getData().getStringExtra("dialCode");
-                if (dialCode != null) {
-                    selectCountryNumber.setText(dialCode);
-                }
-            }
-        });
-
+        selectCountryNumber = findViewById(R.id.selectCountryNumber);
         Button addContactButton = findViewById(R.id.addContactButton);
+
+        // Input fields.
         EditText inputFirstName = findViewById(R.id.inputFirstName);
         EditText inputLastName = findViewById(R.id.inputLastName);
         EditText inputEmail = findViewById(R.id.inputEmail);
         EditText inputNickname = findViewById(R.id.inputNickname);
         EditText inputPhoneNumber = findViewById(R.id.inputPhoneNumber);
-        //Intent coming in
+
+        // Country selection.
+        selectCountryNumber.setOnClickListener(v -> {
+            Intent intent = new Intent(AddContactActivity.this, CountrySelection.class);
+            startActivityForResult(intent, REQUEST_COUNTRY);
+        });
+
+        // Existing contact information.
         Intent intent = getIntent();
         if (intent.getExtras() != null) {
             String firstname = intent.getStringExtra("firstname");
@@ -101,6 +83,7 @@ public class AddContactActivity extends AppCompatActivity {
             String phoneShow = intent.getStringExtra("phone");
             String emailShow = intent.getStringExtra("email");
             String avatar = intent.getStringExtra("avatar");
+
             inputFirstName.setText(firstname);
             inputLastName.setText(lastname);
             selectCountryNumber.setText(countryCodeShow);
@@ -108,8 +91,12 @@ public class AddContactActivity extends AppCompatActivity {
             inputEmail.setText(emailShow);
             inputNickname.setText(nicknameShow);
 
+            // Back button: preserve your original behavior.
             backButton.setOnClickListener(v -> {
-                Intent tempIntent = new Intent(this, MessagePage.class);
+                Intent tempIntent = new Intent(
+                        this,
+                        MessagePage.class
+                );
                 tempIntent.putExtra("firstname", firstname);
                 tempIntent.putExtra("lastname", lastname);
                 tempIntent.putExtra("nickname", nicknameShow);
@@ -121,59 +108,74 @@ public class AddContactActivity extends AppCompatActivity {
                 finish();
             });
 
+            // Update existing contact.
             addContactButton.setOnClickListener(v -> {
-                dbHelper = new DatabaseHelper(this);
                 String firstName = inputFirstName.getText().toString();
                 String lastName = inputLastName.getText().toString();
                 String email = inputEmail.getText().toString();
                 String nickname = inputNickname.getText().toString();
                 String countryCode = selectCountryNumber.getText().toString();
                 String phoneNumber = inputPhoneNumber.getText().toString();
-                String phone = countryCode + phoneNumber;
-                String avatarFilename;
-                if (avatar != null) {
-                    avatarFilename = avatar;
-                } else {
-                    avatarFilename = null;
-                }
+
+                String avatarFilename = avatar;
                 if (selectedAvatarUri != null) {
                     avatarFilename = saveAvatar(selectedAvatarUri);
                     if (avatarFilename == null) {
                         return;
                     }
                 }
-                int id = dbHelper.getContactIdByNumber(countryCode, phoneNumber);
-                Log.e("all info", phoneNumber);
-                long result = dbHelper.updateContact(id, firstName, lastName, countryCode, phoneNumber, email, nickname, avatarFilename);
-                if (result == -1) {
-                    Log.e("AddContactActivity", "Contact not update: " + firstName + " " + lastName + " " + phone + " " + email + " " + nickname + " " + avatarFilename);
+
+                // Look up the original contact, not the edited number.
+                int id = dbHelper.getContactIdByNumber(
+                        countryCodeShow,
+                        phoneShow
+                );
+
+                if (id < 0) {
+                    Log.e(
+                            "AddContactActivity",
+                            "Original contact not found"
+                    );
                     return;
                 }
-                Log.e("AddContactActivity", "Contact update: " + firstName + " " + lastName + " " + phone + " " + email + " " + nickname + " " + avatarFilename);
+
+                long result = dbHelper.updateContact(
+                        id,
+                        firstName,
+                        lastName,
+                        countryCode,
+                        phoneNumber,
+                        email,
+                        nickname,
+                        avatarFilename
+                );
+                if (result <= 0) {
+                    Log.e("AddContactActivity", "Contact update failed");
+                    return;
+                }
+                Log.d("AddContactActivity", "Contact updated successfully");
                 finish();
             });
 
-            if (avatar != null) {
-                File temp = null;
-                if (!avatar.isEmpty()) {
-                    temp =  new File(new File(this.getFilesDir(), "avatars"), avatar);
-                }
-                if (temp != null) {
-                    if (temp.isFile()){
-                        contactAvatar.setImageURI(Uri.fromFile(temp));
-                    } else {
-                        contactAvatar.setImageResource(R.drawable.outline_account_circle_24);
-                    }
+            // Display existing avatar.
+            if (avatar != null && !avatar.isEmpty()) {
+                File avatarFile = new File(
+                        new File(getFilesDir(), "avatars"),
+                        avatar
+                );
+                if (avatarFile.isFile()) {
+                    contactAvatar.setImageURI(Uri.fromFile(avatarFile));
                 } else {
                     contactAvatar.setImageResource(R.drawable.outline_account_circle_24);
                 }
             }
+
         } else {
-            //back button
+
+            // New contact.
             backButton.setOnClickListener(v -> finish());
-            //add Contact button
+
             addContactButton.setOnClickListener(v -> {
-                dbHelper = new DatabaseHelper(this);
                 String firstName = inputFirstName.getText().toString();
                 String lastName = inputLastName.getText().toString();
                 String email = inputEmail.getText().toString();
@@ -182,23 +184,105 @@ public class AddContactActivity extends AppCompatActivity {
                 String phoneNumber = inputPhoneNumber.getText().toString();
 
                 String avatarFilename = null;
-
                 if (selectedAvatarUri != null) {
                     avatarFilename = saveAvatar(selectedAvatarUri);
                     if (avatarFilename == null) {
                         return;
                     }
                 }
-                long result = dbHelper.insertContact(firstName, lastName, countryCode, phoneNumber, email, nickname, avatarFilename);
-                if (result == -1) {
-                    Log.e("AddContactActivity", "Contact not added: " + firstName + " " + lastName + " " + countryCode + " " + phoneNumber + " " + email + " " + nickname + " " + avatarFilename);
+                long result = dbHelper.insertContact(
+                        firstName,
+                        lastName,
+                        countryCode,
+                        phoneNumber,
+                        email,
+                        nickname,
+                        avatarFilename
+                );
+
+                if (result <= 0) {
+                    Log.e("AddContactActivity", "Contact insertion failed");
                     return;
                 }
-                Log.e("AddContactActivity", "Contact added: " + firstName + " " + lastName + " " + countryCode + " " + phoneNumber + " " + email + " " + nickname + " " + avatarFilename);
+                Log.d("AddContactActivity", "Contact added successfully");
                 finish();
             });
         }
+    }
 
+    private void openAvatarPicker() {
+        Intent intent;
+        if (Build.VERSION.SDK_INT >= 33) {
+            // Native Android Photo Picker.
+            intent = new Intent("android.provider.action.PICK_IMAGES");
+            intent.setType("image/*");
+        } else {
+            // Framework fallback for older Android versions.
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+            intent.setType("image/*");
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+        }
+        try {
+            startActivityForResult(intent, REQUEST_AVATAR);
+        } catch (android.content.ActivityNotFoundException e) {
+            Log.e(
+                    "AddContactActivity",
+                    "No image picker available",
+                    e
+            );
+        }
+    }
+
+    @Override
+    protected void onActivityResult(
+            int requestCode,
+            int resultCode,
+            Intent data
+    ) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode != RESULT_OK || data == null) {
+            return;
+        }
+        if (requestCode == REQUEST_COUNTRY) {
+            String dialCode = data.getStringExtra("dialCode");
+            if (dialCode != null) {
+                selectCountryNumber.setText(dialCode);
+            }
+        } else if (requestCode == REQUEST_AVATAR) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                selectedAvatarUri = uri;
+                contactAvatar.setImageURI(uri);
+            }
+        }
+    }
+
+    private void setupWindowInsets() {
+        ScrollView scrollView = findViewById(R.id.addContactScrollView);
+        if (Build.VERSION.SDK_INT >= 30) {
+            scrollView.setOnApplyWindowInsetsListener((view, insets) -> {
+                android.graphics.Insets systemBars =
+                        insets.getInsets(
+                                WindowInsets.Type.systemBars()
+                        );
+                android.graphics.Insets ime =
+                        insets.getInsets(
+                                WindowInsets.Type.ime()
+                        );
+                int bottomPadding = Math.max(
+                        systemBars.bottom,
+                        ime.bottom
+                );
+                view.setPadding(
+                        systemBars.left,
+                        systemBars.top,
+                        systemBars.right,
+                        bottomPadding
+                );
+                return insets;
+            });
+            scrollView.requestApplyInsets();
+        }
     }
 
     private String saveAvatar(Uri imageUri) {
@@ -210,7 +294,8 @@ public class AddContactActivity extends AppCompatActivity {
         String filename = UUID.randomUUID().toString() + ".jpg";
         File destination = new File(avatarDirectory, filename);
         try (
-                InputStream inputStream = getContentResolver().openInputStream(imageUri);
+                InputStream inputStream =
+                        getContentResolver().openInputStream(imageUri);
                 FileOutputStream outputStream = new FileOutputStream(destination)
         ) {
             if (inputStream == null) {

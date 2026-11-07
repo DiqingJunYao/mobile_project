@@ -1,76 +1,62 @@
 package com.example.mobile_project;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.AnimationDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.LinearLayout;
-
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.content.Intent;
+import android.widget.ListView;
+import android.annotation.SuppressLint;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements RecyclerViewInterface {
-    RecyclerView recyclerView;
-    OutlineRecyclerViewAdapter adapter;
-    ArrayList<Contact> contacts = new ArrayList<>();
+public class MainActivity extends Activity implements RecyclerViewInterface {
+
+    private static final int SMS_PERMISSION_REQUEST = 100;
+
+    private ListView listView;
+    private OutlineListAdapter adapter;
+
+    private final ArrayList<Contact> contacts = new ArrayList<>();
+
+    private boolean receiverRegistered = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //background animation
-        LinearLayout LinearLayout = findViewById(R.id.mainLayout);
-        Button addContactButton = findViewById(R.id.addContact);
-        AnimationDrawable animationDrawable = (AnimationDrawable) LinearLayout.getBackground();
-        animationDrawable.setEnterFadeDuration(2500);
-        animationDrawable.setExitFadeDuration(5000);
-        animationDrawable.start();
+        // Background animation.
+        LinearLayout mainLayout = findViewById(R.id.mainLayout);
+        if (mainLayout.getBackground() instanceof AnimationDrawable) {
+            AnimationDrawable animationDrawable = (AnimationDrawable) mainLayout.getBackground();
+            animationDrawable.setEnterFadeDuration(2500);
+            animationDrawable.setExitFadeDuration(5000);
+            animationDrawable.start();
+        }
 
-        //add Contact button
+        // Add Contact button.
+        Button addContactButton = findViewById(R.id.addContact);
         addContactButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, AddContactActivity.class);
             startActivity(intent);
         });
 
-        //main Contacts recycler view
-        setupContacts();
-        recyclerView = findViewById(R.id.recyclerViewMainContacts);
-        adapter = new OutlineRecyclerViewAdapter(this, contacts, this);
-        recyclerView.setAdapter(adapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        // Contact list.
+        listView = findViewById(R.id.listViewMainContacts);
+        adapter = new OutlineListAdapter(this, contacts, this);
+        listView.setAdapter(adapter);
 
-        //receive SMS permission
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECEIVE_SMS
-        ) != PackageManager.PERMISSION_GRANTED) {
-
-            smsPermissionLauncher.launch(Manifest.permission.RECEIVE_SMS);
-        }
-
-        //send SMS permission
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.SEND_SMS
-        ) != PackageManager.PERMISSION_GRANTED) {
-
-            sendSmsPermissionLauncher.launch(Manifest.permission.SEND_SMS);
-        }
+        // SMS permissions.
+        checkSmsPermissions();
     }
 
     @Override
@@ -80,120 +66,182 @@ public class MainActivity extends AppCompatActivity implements RecyclerViewInter
         adapter.notifyDataSetChanged();
     }
 
-    private void setupContacts(){
+    private void setupContacts() {
         contacts.clear();
-        try(DatabaseHelper helper = new DatabaseHelper(this)) {
-            ArrayList<Contact> temp = helper.getAllContacts();
-            for (int i = 0; i < temp.size(); i++) {
-                Log.e("ID", String.valueOf(i));
-                Log.e("Firstname", String.valueOf(temp.get(i).getFirstName()));
-                Log.e("Lastname", String.valueOf(temp.get(i).getLastName()));
-                Log.e("Nickname", String.valueOf(temp.get(i).getNickName()));
-                Log.e("Country Code", String.valueOf(temp.get(i).getCountryCode()));
-                Log.e("Phone", String.valueOf(temp.get(i).getPhone()));
-                Log.e("Email", String.valueOf(temp.get(i).getEmail()));
-                Log.e("Avatar", String.valueOf(temp.get(i).getAvatar()));
-                contacts.add(temp.get(i));
-            }
+
+        try (DatabaseHelper helper = new DatabaseHelper(this)) {
+            contacts.addAll(helper.getAllContacts());
         }
     }
 
-    @Override
-    public void onItemClick(int position) {
-        Intent intent = new Intent(MainActivity.this, MessagePage.class);
-        intent.putExtra("firstname", String.valueOf(contacts.get(position).getFirstName()));
-        intent.putExtra("lastname", String.valueOf(contacts.get(position).getLastName()));
-        intent.putExtra("nickname", String.valueOf(contacts.get(position).getNickName()));
-        intent.putExtra("countryCode", String.valueOf(contacts.get(position).getCountryCode()));
-        intent.putExtra("phone", String.valueOf(contacts.get(position).getPhone()));
-        intent.putExtra("email", String.valueOf(contacts.get(position).getEmail()));
-        intent.putExtra("avatar", String.valueOf(contacts.get(position).getAvatar()));
+    private void openMessagePage(int position) {
+
+        if (position < 0 || position >= contacts.size()) {
+            return;
+        }
+
+        Contact contact = contacts.get(position);
+
+        Intent intent = new Intent(
+                MainActivity.this,
+                MessagePage.class
+        );
+
+        intent.putExtra("firstname", contact.getFirstName());
+        intent.putExtra("lastname", contact.getLastName());
+        intent.putExtra("nickname", contact.getNickName());
+        intent.putExtra("countryCode", contact.getCountryCode());
+        intent.putExtra("phone", contact.getPhone());
+        intent.putExtra("email", contact.getEmail());
+        intent.putExtra("avatar", contact.getAvatar());
+
         startActivity(intent);
     }
 
-    @Override
-    public void onItemLongClick(int position) {
+    private void deleteContact(int position) {
         if (position < 0 || position >= contacts.size()) {
             Log.e("CONTACT", "Invalid position: " + position);
             return;
         }
         Contact contact = contacts.get(position);
+        boolean deleted = false;
         try (DatabaseHelper databaseHelper = new DatabaseHelper(this)) {
-            long id = databaseHelper.getContactIdByNumber(
-                    contact.getCountryCode(),
-                    contact.getPhone()
-            );
+            long id = databaseHelper.getContactIdByNumber(contact.getCountryCode(), contact.getPhone());
             if (id < 0) {
                 Log.e("DATABASE", "Contact not found");
                 return;
             }
             int result = databaseHelper.deleteContact(id);
             Log.d("DATABASE", "Deleted rows: " + result);
-            if (result > 0) {
-                refreshContacts(databaseHelper);
+            deleted = result > 0;
+        }
+        if (deleted) {
+            refreshContacts();
+        }
+    }
+
+    private void refreshContacts() {
+        try (DatabaseHelper databaseHelper = new DatabaseHelper(this)) {
+            ArrayList<Contact> updatedContacts = databaseHelper.getAllContacts();
+            contacts.clear();
+            contacts.addAll(updatedContacts);
+            adapter.notifyDataSetChanged();
+            if (!contacts.isEmpty()) {
+                listView.setSelection(contacts.size() - 1);
             }
         }
     }
 
-    private final ActivityResultLauncher<String> smsPermissionLauncher =
-            registerForActivityResult(
-                    new ActivityResultContracts.RequestPermission(),
-                    isGranted -> {
-                        if (isGranted) {
-                            Log.d("SMS", "Permission granted");
-                        } else {
-                            Log.d("SMS", "Permission denied");
-                        }
-                    }
-            );
-    private final ActivityResultLauncher<String> sendSmsPermissionLauncher =
-            registerForActivityResult(
-                    new ActivityResultContracts.RequestPermission(),
-                    isGranted -> {
-                        if (isGranted) {
-                            Log.d("SMS", "SEND_SMS permission granted");
-                        } else {
-                            Log.d("SMS", "SEND_SMS permission denied");
-                        }
-                    }
-            );
+    private void checkSmsPermissions() {
 
-    private final BroadcastReceiver messageUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            DatabaseHelper databaseHelper = new DatabaseHelper(context);
-            if ("com.example.mobile_project.SMS_UPDATED".equals(intent.getAction())) {
-                refreshContacts(databaseHelper);
-            }
+        ArrayList<String> missingPermissions = new ArrayList<>();
+
+        if (checkSelfPermission(Manifest.permission.RECEIVE_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            missingPermissions.add(Manifest.permission.RECEIVE_SMS);
         }
-    };
-    private void refreshContacts(DatabaseHelper databaseHelper) {
-        ArrayList<Contact> updatedContact = databaseHelper.getAllContacts();
-        contacts.clear();
-        contacts.addAll(updatedContact);
-        adapter.notifyDataSetChanged();
-        if (!contacts.isEmpty()) {
-            recyclerView.scrollToPosition(contacts.size() - 1);
+
+        if (checkSelfPermission(Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            missingPermissions.add(Manifest.permission.SEND_SMS);
+        }
+
+        if (!missingPermissions.isEmpty()) {
+
+            requestPermissions(
+                    missingPermissions.toArray(new String[0]),
+                    SMS_PERMISSION_REQUEST
+            );
         }
     }
 
     @Override
+    public void onRequestPermissionsResult(
+            int requestCode,
+            String[] permissions,
+            int[] grantResults
+    ) {
+        super.onRequestPermissionsResult(
+                requestCode,
+                permissions,
+                grantResults
+        );
+
+        if (requestCode != SMS_PERMISSION_REQUEST) {
+            return;
+        }
+
+        for (int i = 0; i < permissions.length; i++) {
+
+            boolean granted =
+                    i < grantResults.length
+                            && grantResults[i] == PackageManager.PERMISSION_GRANTED;
+
+            Log.d(
+                    "SMS",
+                    permissions[i] + ": " +
+                            (granted ? "granted" : "denied")
+            );
+        }
+    }
+
+    private final BroadcastReceiver messageUpdateReceiver =
+            new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if ("com.example.mobile_project.SMS_UPDATED".equals(intent.getAction())) {
+                        refreshContacts();
+                    }
+                }
+            };
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
+    @Override
     protected void onStart() {
         super.onStart();
+
         IntentFilter filter = new IntentFilter(
                 "com.example.mobile_project.SMS_UPDATED"
         );
-        ContextCompat.registerReceiver(
-                this,
-                messageUpdateReceiver,
-                filter,
-                ContextCompat.RECEIVER_NOT_EXPORTED
-        );
+
+        if (Build.VERSION.SDK_INT >= 33) {
+
+            registerReceiver(
+                    messageUpdateReceiver,
+                    filter,
+                    Context.RECEIVER_NOT_EXPORTED
+            );
+
+        } else {
+
+            registerReceiver(
+                    messageUpdateReceiver,
+                    filter
+            );
+        }
+
+        receiverRegistered = true;
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        unregisterReceiver(messageUpdateReceiver);
+
+        if (receiverRegistered) {
+            unregisterReceiver(messageUpdateReceiver);
+            receiverRegistered = false;
+        }
+    }
+
+    @Override
+    public void onItemClick(int position) {
+        openMessagePage(position);
+    }
+
+    @Override
+    public void onItemLongClick(int position) {
+        deleteContact(position);
     }
 }

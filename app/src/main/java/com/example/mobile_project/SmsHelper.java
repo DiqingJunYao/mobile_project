@@ -9,8 +9,6 @@ import android.net.Uri;
 import android.telephony.SmsManager;
 import android.util.Log;
 
-import androidx.core.content.ContextCompat;
-
 import java.util.ArrayList;
 
 public class SmsHelper {
@@ -19,8 +17,7 @@ public class SmsHelper {
         if (phoneNumber == null || phoneNumber.isEmpty() || message == null || message.isEmpty()) {
             return false;
         }
-        if (ContextCompat.checkSelfPermission(
-                context,
+        if (context.checkSelfPermission(
                 Manifest.permission.SEND_SMS
         ) != PackageManager.PERMISSION_GRANTED) {
             return false;
@@ -40,7 +37,6 @@ public class SmsHelper {
                 sendInIntent(context, smsManager, phoneNumber, message, messageId);
             } else {
                 sendInIntentMultiparts(context, smsManager, phoneNumber, parts, messageId);
-                return false;
             }
             return true;
         } catch (Exception e) {
@@ -68,7 +64,7 @@ public class SmsHelper {
         );
     }
 
-    protected static void sendInIntentMultiparts(
+    protected static boolean sendInIntentMultiparts(
             Context context,
             SmsManager smsManager,
             String phoneNumber,
@@ -76,42 +72,70 @@ public class SmsHelper {
             long messageId
     ) {
         ArrayList<PendingIntent> sentIntents = new ArrayList<>();
+
         try (DatabaseHelper databaseHelper = new DatabaseHelper(context)) {
+
             for (int i = 0; i < parts.size(); i++) {
-                Intent intent = new Intent(context, SmsSentReceiver.class);
+
+                Intent intent = new Intent(
+                        context,
+                        SmsSentReceiver.class
+                );
 
                 intent.putExtra("message_id", messageId);
                 intent.putExtra("part_index", i);
                 intent.putExtra("total_parts", parts.size());
 
                 intent.setData(
-                        Uri.parse("sms-status://message/" + messageId + "/part/" + i)
+                        Uri.parse(
+                                "sms-status://message/"
+                                        + messageId
+                                        + "/part/"
+                                        + i
+                        )
                 );
-                long result = databaseHelper.insertMultipartMessage(messageId, i, "pending");
+
+                long result = databaseHelper.insertMultipartMessage(
+                        messageId,
+                        i,
+                        "pending"
+                );
+
                 if (result == -1) {
-                    Log.e("DATABASE", "Failed to insert multipart message status!");
-                    return;
+                    Log.e("DATABASE", "Failed to insert multipart status");
+                    return false;
                 }
+
                 PendingIntent sentIntent = PendingIntent.getBroadcast(
                         context,
                         0,
                         intent,
-                        PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        PendingIntent.FLAG_IMMUTABLE
+                                | PendingIntent.FLAG_UPDATE_CURRENT
                 );
 
                 sentIntents.add(sentIntent);
             }
-            if (databaseHelper.checkMultipartInserted(messageId, parts.size())) {
-                smsManager.sendMultipartTextMessage(
-                        phoneNumber,
-                        null,
-                        parts,
-                        sentIntents,
-                        null
-                );
+
+            if (!databaseHelper.checkMultipartInserted(
+                    messageId,
+                    parts.size()
+            )) {
+                return false;
             }
+
+            smsManager.sendMultipartTextMessage(
+                    phoneNumber,
+                    null,
+                    parts,
+                    sentIntents,
+                    null
+            );
+
+            return true;
         } catch (Exception e) {
-            Log.e("DATABASE", "Failed to insert multipart message status!", e);
+            Log.e("SMS", "Failed to submit multipart SMS", e);
+            return false;
         }
     }
 }

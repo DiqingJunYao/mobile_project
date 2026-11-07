@@ -6,7 +6,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 
@@ -37,7 +36,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String MULTIPART_MESSAGE_COLUMN_PART_STATUS = "part_status";
 
 
-    public DatabaseHelper(@Nullable Context context) {
+    public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
@@ -102,7 +101,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("email", email);
         values.put("nickname", nickname);
         values.put("avatar", avatar);
-        long result = db.insert("Contacts", null, values);
+        long result = db.insert(TABLE_NAME_CONTACTS, null, values);
         db.close();
         return result;
     }

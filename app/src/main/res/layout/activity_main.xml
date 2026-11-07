@@ -1,44 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    android:background="@drawable/gradient_list"
-    android:id="@+id/mainLayout">
+    android:background="@drawable/gradient_list">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:orientation="horizontal">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/imageView2"
-                android:layout_width="0dp"
-                android:layout_height="100dp"
-                android:layout_weight="1"
-                android:contentDescription="@string/am_imageView2_contentDescription_"
-                android:src="@drawable/_42_logo" />
+        <ImageView
+            android:id="@+id/imageView2"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/am_imageView2_contentDescription_"
+            android:src="@drawable/_42_logo" />
 
-            <Button
-                android:id="@+id/addContact"
-                android:layout_width="100dp"
-                android:layout_height="100dp"
-                android:textSize="60sp"
-                android:text="@string/am_addContact" />
+        <Button
+            android:id="@+id/addContact"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:textSize="60sp"
+            android:text="@string/am_addContact" />
 
-        </LinearLayout>
+    </LinearLayout>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerViewMainContacts"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-        </androidx.recyclerview.widget.RecyclerView>
-
-
-
+    <ListView
+        android:id="@+id/listViewMainContacts"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@null"
+        android:dividerHeight="0dp" />
 
 </LinearLayout>

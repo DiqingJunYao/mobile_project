@@ -38,7 +38,7 @@ public class SmsSentReceiver extends BroadcastReceiver {
         DatabaseHelper dbHelper = new DatabaseHelper(context);
         if (totalParts > 1) {
             long updateResult = dbHelper.updateMultipartMessageStatus(messageId, partIndex, status);
-            if (updateResult == -1) {
+            if (updateResult == 0) {
                 Log.e("DATABASE", "Failed to update multipart message status!");
                 return;
             }

@@ -1,210 +1,347 @@
 package com.example.mobile_project;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.drawable.AnimationDrawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
-
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.content.ContextCompat;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.File;
 import java.util.ArrayList;
 
-public class MessagePage extends AppCompatActivity {
-    private RecyclerView recyclerView;
-    public MessagePageRecyclerViewAdapter adapter;
-    private ArrayList<Message> messages;
-    private long contactId;
-    private DatabaseHelper debugDbHelper;
+public class MessagePage extends Activity {
 
+    private static final String SMS_UPDATED =
+            "com.example.mobile_project.SMS_UPDATED";
 
+    private ListView listView;
+    private MessagePageListAdapter adapter;
+    private ArrayList<Message> messages = new ArrayList<>();
+
+    private long contactId = -1;
+    private boolean receiverRegistered = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        debugDbHelper = new DatabaseHelper(this);
-        debugDbHelper.getReadableDatabase();
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+
         setContentView(R.layout.activity_message_page);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.messageLayout), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
+        setupWindowInsets();
+
+        // Contact information.
         Intent intent = getIntent();
+
         String firstname = intent.getStringExtra("firstname");
         String lastname = intent.getStringExtra("lastname");
-        String name = firstname + " " + lastname;
         String nickname = intent.getStringExtra("nickname");
         String countryCode = intent.getStringExtra("countryCode");
         String phone = intent.getStringExtra("phone");
         String email = intent.getStringExtra("email");
         String avatar = intent.getStringExtra("avatar");
-        Contact temp = new Contact(firstname, lastname, nickname, countryCode, phone, email, avatar);
-        //background animation
-        ConstraintLayout constraintLayout = findViewById(R.id.messageLayout);
-        AnimationDrawable animationDrawable = (AnimationDrawable) constraintLayout.getBackground();
-        animationDrawable.setEnterFadeDuration(2500);
-        animationDrawable.setExitFadeDuration(5000);
-        animationDrawable.start();
-        //set back button
+
+        String name = (firstname == null ? "" : firstname)
+                + " "
+                + (lastname == null ? "" : lastname);
+
+        Contact contact = new Contact(
+                firstname,
+                lastname,
+                nickname,
+                countryCode,
+                phone,
+                email,
+                avatar
+        );
+
+        // Background animation.
+        View messageLayout = findViewById(R.id.messageLayout);
+
+        if (messageLayout.getBackground() instanceof AnimationDrawable) {
+
+            AnimationDrawable animationDrawable =
+                    (AnimationDrawable) messageLayout.getBackground();
+
+            animationDrawable.setEnterFadeDuration(2500);
+            animationDrawable.setExitFadeDuration(5000);
+            animationDrawable.start();
+        }
+
+        // Back button.
         Button backButton = findViewById(R.id.backButton);
         backButton.setOnClickListener(v -> finish());
-        //set name and nickname and avatar
+
+        // Contact header.
         TextView nameTextView = findViewById(R.id.name);
         TextView nicknameTextView = findViewById(R.id.nickName);
         ImageView avatarImageView = findViewById(R.id.avatarForMessage);
-        nameTextView.setText(name);
-        nicknameTextView.setText(temp.getNickName());
-        File avatarFile = temp.getAvatarFile(this);
-        if (avatarFile != null) {
-            if (avatarFile.isFile()) {
-                avatarImageView.setImageURI(android.net.Uri.fromFile(avatarFile));
-            } else {
-                avatarImageView.setImageResource(R.drawable.outline_account_circle_24);
-            }
-        } else {
-            avatarImageView.setImageResource(R.drawable.outline_account_circle_24);
-        }
-        //recycler view
-        try (DatabaseHelper databaseHelper = new DatabaseHelper(this)) {
-            int id = databaseHelper.getContactIdByNumber(countryCode, phone);
-            contactId = id;
-            messages = databaseHelper.getMessagesByContactId(contactId);
-            recyclerView = findViewById(R.id.messageRecyclerView);
-            adapter = new MessagePageRecyclerViewAdapter(this, messages);
-            recyclerView.setAdapter(adapter);
-            recyclerView.setLayoutManager(new LinearLayoutManager(this));
-            //personal info page
-            avatarImageView.setOnClickListener(v -> {
-                Intent intent1 = new Intent(this, AddContactActivity.class);
-                intent1.putExtra("firstname", firstname);
-                intent1.putExtra("lastname", lastname);
-                intent1.putExtra("nickname", nickname);
-                intent1.putExtra("countryCode", countryCode);
-                intent1.putExtra("phone", phone);
-                intent1.putExtra("email", email);
-                intent1.putExtra("avatar", avatar);
-                startActivity(intent1);
-                finish();
-            });
-            nameTextView.setOnClickListener(v -> {
-                Intent intent1 = new Intent(this, AddContactActivity.class);
-                intent1.putExtra("firstname", firstname);
-                intent1.putExtra("lastname", lastname);
-                intent1.putExtra("nickname", nickname);
-                intent1.putExtra("countryCode", countryCode);
-                intent1.putExtra("phone", phone);
-                intent1.putExtra("email", email);
-                intent1.putExtra("avatar", avatar);
-                startActivity(intent1);
-                finish();
-            });
-            nicknameTextView.setOnClickListener(v -> {
-                Intent intent1 = new Intent(this, AddContactActivity.class);
-                intent1.putExtra("firstname", firstname);
-                intent1.putExtra("lastname", lastname);
-                intent1.putExtra("nickname", nickname);
-                intent1.putExtra("countryCode", countryCode);
-                intent1.putExtra("phone", phone);
-                intent1.putExtra("email", email);
-                intent1.putExtra("avatar", avatar);
-                startActivity(intent1);
-                finish();
-            });
-            //send SMS
-            Button sendButton = findViewById(R.id.sendMessageButton);
-            EditText editTextForInputMessage = findViewById(R.id.editTextForInputMessage);
-            sendButton.setOnClickListener(v -> {
-                String content = editTextForInputMessage.getText().toString();
-                if (content.trim().isEmpty()) {
-                    return;
-                }
-                String phoneNumber = temp.getCountryCode() + temp.getPhone();
-                long timestamp = System.currentTimeMillis();
-                long messageId;
-                try (DatabaseHelper dbHelper = new DatabaseHelper(this)) {
-                    messageId = dbHelper.insertMessage(contactId, content, timestamp, true, name, "pending");
-                    refreshMessages();
-                }
-                boolean accepted = SmsHelper.sendSms(
-                        this,
-                        phoneNumber,
-                        content,
-                        messageId
-                );
-                if (!accepted) {
-                    Log.e("SMS", "Failed to send SMS!");
-                }
-//                databaseHelper.insertMessage(id, content, System.currentTimeMillis(), true, name);
-                editTextForInputMessage.setText("");
-            });
-        } catch (Exception e) {
-            Log.e("DATABASE", "Failed to get messages!", e);
-        }
-    }
 
-    private final BroadcastReceiver messageUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            DatabaseHelper databaseHelper = new DatabaseHelper(context);
-            if ("com.example.mobile_project.SMS_UPDATED".equals(intent.getAction())) {
+        nameTextView.setText(name.trim());
+        nicknameTextView.setText(contact.getNickName());
+
+        File avatarFile = contact.getAvatarFile(this);
+
+        if (avatarFile != null && avatarFile.isFile()) {
+
+            avatarImageView.setImageURI(
+                    Uri.fromFile(avatarFile)
+            );
+
+        } else {
+
+            avatarImageView.setImageResource(
+                    R.drawable.outline_account_circle_24
+            );
+        }
+
+        // Open contact information.
+        View.OnClickListener openContactInfo = v -> {
+
+            Intent editIntent = new Intent(
+                    MessagePage.this,
+                    AddContactActivity.class
+            );
+
+            editIntent.putExtra("firstname", firstname);
+            editIntent.putExtra("lastname", lastname);
+            editIntent.putExtra("nickname", nickname);
+            editIntent.putExtra("countryCode", countryCode);
+            editIntent.putExtra("phone", phone);
+            editIntent.putExtra("email", email);
+            editIntent.putExtra("avatar", avatar);
+
+            startActivity(editIntent);
+            finish();
+        };
+
+        avatarImageView.setOnClickListener(openContactInfo);
+        nameTextView.setOnClickListener(openContactInfo);
+        nicknameTextView.setOnClickListener(openContactInfo);
+
+        // Get contact ID.
+        try (DatabaseHelper databaseHelper = new DatabaseHelper(this)) {
+
+            contactId = databaseHelper.getContactIdByNumber(
+                    countryCode,
+                    phone
+            );
+
+        } catch (Exception e) {
+
+            Log.e("DATABASE", "Failed to find contact", e);
+        }
+
+        if (contactId < 0) {
+            Log.e("DATABASE", "Contact not found");
+        }
+
+        // Message list.
+        listView = findViewById(R.id.messageListView);
+
+        adapter = new MessagePageListAdapter(this, messages);
+        listView.setAdapter(adapter);
+
+        if (contactId >= 0) {
+            refreshMessages();
+        }
+
+        // Send SMS.
+        Button sendButton = findViewById(R.id.sendMessageButton);
+
+        EditText editTextForInputMessage =
+                findViewById(R.id.editTextForInputMessage);
+
+        sendButton.setOnClickListener(v -> {
+
+            String content =
+                    editTextForInputMessage.getText().toString();
+
+            if (content.trim().isEmpty()) {
+                return;
+            }
+
+            if (contactId < 0) {
+                Log.e("SMS", "Cannot send: contact not found");
+                return;
+            }
+
+            String phoneNumber =
+                    contact.getCountryCode() + contact.getPhone();
+
+            long timestamp = System.currentTimeMillis();
+
+            long messageId;
+
+            try (DatabaseHelper dbHelper = new DatabaseHelper(this)) {
+
+                messageId = dbHelper.insertMessage(
+                        contactId,
+                        content,
+                        timestamp,
+                        true,
+                        name,
+                        "pending"
+                );
+
+            } catch (Exception e) {
+
+                Log.e("DATABASE", "Failed to save message", e);
+                return;
+            }
+
+            if (messageId < 0) {
+                Log.e("DATABASE", "Message insertion failed");
+                return;
+            }
+
+            refreshMessages();
+
+            boolean accepted = SmsHelper.sendSms(
+                    this,
+                    phoneNumber,
+                    content,
+                    messageId
+            );
+
+            if (!accepted) {
+                Log.e("SMS", "Failed to send SMS");
+
+                try (DatabaseHelper dbHelper = new DatabaseHelper(this)) {
+                    dbHelper.updateMessageStatus(messageId, "failed");
+                }
+
                 refreshMessages();
             }
-        }
-    };
+
+            editTextForInputMessage.setText("");
+        });
+    }
+
     private void refreshMessages() {
+
+        if (contactId < 0) {
+            return;
+        }
+
         try (DatabaseHelper dbHelper = new DatabaseHelper(this)) {
-            ArrayList<Message> updatedMessages = dbHelper.getMessagesByContactId(contactId);
+
+            ArrayList<Message> updatedMessages =
+                    dbHelper.getMessagesByContactId(contactId);
+
             messages.clear();
             messages.addAll(updatedMessages);
+
             adapter.notifyDataSetChanged();
+
             if (!messages.isEmpty()) {
-                recyclerView.scrollToPosition(messages.size() - 1);
+                listView.setSelection(messages.size() - 1);
             }
+
+        } catch (Exception e) {
+
+            Log.e("DATABASE", "Failed to refresh messages", e);
         }
     }
 
+    private final BroadcastReceiver messageUpdateReceiver =
+            new BroadcastReceiver() {
+
+                @Override
+                public void onReceive(Context context, Intent intent) {
+
+                    if (SMS_UPDATED.equals(intent.getAction())) {
+                        refreshMessages();
+                    }
+                }
+            };
+
+    @SuppressLint("UnspecifiedRegisterReceiverFlag")
     @Override
     protected void onStart() {
         super.onStart();
-        IntentFilter filter = new IntentFilter(
-                "com.example.mobile_project.SMS_UPDATED"
-        );
-        ContextCompat.registerReceiver(
-                this,
-                messageUpdateReceiver,
-                filter,
-                ContextCompat.RECEIVER_NOT_EXPORTED
-        );
+
+        IntentFilter filter = new IntentFilter(SMS_UPDATED);
+
+        if (Build.VERSION.SDK_INT >= 33) {
+
+            registerReceiver(
+                    messageUpdateReceiver,
+                    filter,
+                    Context.RECEIVER_NOT_EXPORTED
+            );
+
+        } else {
+
+            registerReceiver(
+                    messageUpdateReceiver,
+                    filter
+            );
+        }
+
+        receiverRegistered = true;
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        unregisterReceiver(messageUpdateReceiver);
+
+        if (receiverRegistered) {
+            unregisterReceiver(messageUpdateReceiver);
+            receiverRegistered = false;
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (adapter != null && messages != null) {
+
+        if (adapter != null && contactId >= 0) {
             refreshMessages();
+        }
+    }
+
+    private void setupWindowInsets() {
+
+        if (Build.VERSION.SDK_INT >= 30) {
+
+            View root = findViewById(R.id.messageLayout);
+
+            root.setOnApplyWindowInsetsListener((view, insets) -> {
+
+                android.graphics.Insets systemBars =
+                        insets.getInsets(
+                                WindowInsets.Type.systemBars()
+                        );
+
+                android.graphics.Insets ime =
+                        insets.getInsets(
+                                WindowInsets.Type.ime()
+                        );
+
+                view.setPadding(
+                        systemBars.left,
+                        systemBars.top,
+                        systemBars.right,
+                        Math.max(systemBars.bottom, ime.bottom)
+                );
+
+                return insets;
+            });
+
+            root.requestApplyInsets();
         }
     }
 }

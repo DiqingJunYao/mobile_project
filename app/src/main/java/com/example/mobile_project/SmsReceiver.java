@@ -7,7 +7,6 @@ import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
-import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
