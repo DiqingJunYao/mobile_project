@@ -9,12 +9,15 @@
     tools:context=".AddContactActivity">
 
     <ScrollView
+        android:id="@+id/addContactScrollView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -31,18 +34,19 @@
 
                 <TextView
                     android:id="@+id/textView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
                     android:layout_weight="1"
                     android:textSize="20sp"
-                    android:text="Tap the Icon to change the Avatar" />
+                    android:text="@string/aac_textView" />
 
                 <ImageView
                     android:id="@+id/avatar"
                     android:layout_width="100dp"
                     android:layout_height="100dp"
                     android:scaleType="centerCrop"
-                    android:contentDescription="Choose contact avatar"
+                    android:contentDescription="@string/aac_avatar_contentDescription"
                     android:src="@drawable/outline_account_circle_24" />
 
             </LinearLayout>
@@ -52,7 +56,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPersonName"
-                android:hint="First Name: "
+                android:hint="@string/aac_inputFirstName_hint"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp" />
 
@@ -61,7 +65,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPersonName"
-                android:hint="Last Name: "
+                android:hint="@string/aac_inputLastName_hint"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp" />
 
@@ -70,7 +74,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress"
-                android:hint="Input Email: "
+                android:hint="@string/aac_inputEmail_hint"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp" />
 
@@ -79,7 +83,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress"
-                android:hint="Input Nickname: "
+                android:hint="@string/aac_inputNickname_hint"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp" />
 
@@ -92,8 +96,7 @@
                     android:id="@+id/selectCountryNumber"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:inputType="phone"
-                    android:hint="+xx"
+                    android:hint="@string/aac_selectCountryNumber_hint"
                     android:textColorHint="#FFFFFF"
                     android:textSize="20sp" />
 
@@ -102,7 +105,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="phone"
-                    android:hint="Input Phone Number: "
+                    android:hint="@string/aac_inputPhoneNumber_hint"
                     android:textColor="#FFFFFF"
                     android:textSize="20sp" />
             </LinearLayout>
@@ -112,12 +115,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="Add Contact" />
+                android:text="@string/aac_addContactButton" />
 
 
 
         </LinearLayout>
     </ScrollView>
+
+    <Button
+        android:id="@+id/backButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/aac_backButton"
+        app:layout_constraintBottom_toTopOf="@+id/addContactScrollView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.14"
+        app:layout_constraintStart_toStartOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

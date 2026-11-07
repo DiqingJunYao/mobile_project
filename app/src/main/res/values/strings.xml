@@ -1,56 +1,5 @@
 <resources>
     <string name="app_name">Mobile_project</string>
-    <string-array name="locations">
-        <item>New York</item>
-        <item>London</item>
-        <item>Paris</item>
-        <item>Tokyo</item>
-        <item>Sydney</item>
-        <item>Beijing</item>
-    </string-array>
-    <string-array name="all_outline">
-        <item>10k</item>
-        <item>10mp</item>
-        <item>11mp</item>
-        <item>12mp</item>
-        <item>13mp</item>
-        <item>14mp</item>
-        <item>15mp</item>
-        <item>16mp</item>
-        <item>17mp</item>
-        <item>18mp</item>
-        <item>19mp</item>
-        <item>20mp</item>
-        <item>21mp</item>
-        <item>22mp</item>
-        <item>23mp</item>
-        <item>24mp</item>
-        <item>2k</item>
-        <item>2k+</item>
-        <item>3k</item>
-    </string-array>
-    <string-array name="all_detail">
-        <item>this is 10k</item>
-        <item>this is 10mp</item>
-        <item>this is 11mp</item>
-        <item>this is 12mp</item>
-        <item>this is 13mp</item>
-        <item>this is 14mp</item>
-        <item>this is 15mp</item>
-        <item>this is 16mp</item>
-        <item>this is 17mp</item>
-        <item>this is 18mp</item>
-        <item>this is 19mp</item>
-        <item>this is 20mp</item>
-        <item>this is 21mp</item>
-        <item>this is 22mp</item>
-        <item>this is 23mp</item>
-        <item>this is 24mp</item>
-        <item>this is 2k</item>
-        <item>this is 2k+</item>
-        <item>this is 3k</item>
-    </string-array>
-
     <string-array name="country_names">
         <item>Afghanistan</item>
         <item>Albania</item>
@@ -980,4 +929,25 @@
         <item>zw</item>
     </string-array>
 
+    <string name="aac_textView">Tap the Icon to change the Avatar</string>
+    <string name="aac_avatar_contentDescription">Choose contact avatar</string>
+    <string name="aac_inputFirstName_hint">First Name: </string>
+    <string name="aac_inputLastName_hint">Last Name: </string>
+    <string name="aac_inputEmail_hint">Input Email: </string>
+    <string name="aac_inputNickname_hint">Input Nickname: </string>
+    <string name="aac_selectCountryNumber_hint">+xx</string>
+    <string name="aac_inputPhoneNumber_hint">Input Phone Number: </string>
+    <string name="aac_addContactButton">Add Contact</string>
+    <string name="aac_backButton">Back</string>
+
+    <string name="am_addContact">+</string>
+    <string name="am_imageView2_contentDescription_">App Logo</string>
+
+    <string name="amp_backButton">back</string>
+    <string name="amp_avatarForMessage_contentDescription">contactAvatar</string>
+    <string name="amp_sendMessageButton">send</string>
+
+    <string name="rvmo_messageStatus_contentDescription">Message Status</string>
+
+    <string name="rvr_imageView_contentDescription">Contact avatar</string>
 </resources>

@@ -59,15 +59,12 @@ public class CountryRecyclerViewAdapter extends RecyclerView.Adapter<CountryRecy
             countryDialingCode = itemView.findViewById(R.id.countryDialingCode);
             countryNativeName = itemView.findViewById(R.id.countryNativeName);
 
-            itemView.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v) {
-                    if (recyclerViewInterface != null) {
-                        int pos = getAdapterPosition();
+            itemView.setOnClickListener(v -> {
+                if (recyclerViewInterface != null) {
+                    int pos = getAdapterPosition();
 
-                        if (pos != RecyclerView.NO_POSITION) {
-                            recyclerViewInterface.onItemClick(pos);
-                        }
+                    if (pos != RecyclerView.NO_POSITION) {
+                        recyclerViewInterface.onItemClick(pos);
                     }
                 }
             });

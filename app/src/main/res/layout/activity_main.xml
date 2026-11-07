@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
@@ -18,17 +16,18 @@
 
             <ImageView
                 android:id="@+id/imageView2"
-                android:layout_width="100dp"
+                android:layout_width="0dp"
                 android:layout_height="100dp"
                 android:layout_weight="1"
-                android:src="@drawable/outline_10k_24" />
+                android:contentDescription="@string/am_imageView2_contentDescription_"
+                android:src="@drawable/_42_logo" />
 
             <Button
                 android:id="@+id/addContact"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:textSize="60dp"
-                android:text="+" />
+                android:textSize="60sp"
+                android:text="@string/am_addContact" />
 
         </LinearLayout>
 

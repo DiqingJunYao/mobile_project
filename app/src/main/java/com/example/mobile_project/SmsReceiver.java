@@ -7,6 +7,8 @@ import android.provider.Telephony;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 
 public class SmsReceiver extends BroadcastReceiver {
@@ -41,10 +43,19 @@ public class SmsReceiver extends BroadcastReceiver {
             db.insertContact(sender, "", phoneNumbers.get(0), phoneNumbers.get(1), "", "", "");
             resultID = db.getContactIdByNumber(phoneNumbers.get(0), phoneNumbers.get(1));
             db.insertMessage(resultID, String.valueOf(messageContent), timestamp, false, String.valueOf(sender), "received message");
+            // Broadcast the update message
+            Intent updateIntent = new Intent("com.example.mobile_project.SMS_UPDATED");
+            updateIntent.setPackage(context.getPackageName());
+            context.sendBroadcast(updateIntent);
         } else {
             Contact temp = db.getContactById(resultID);
             db.insertMessage(resultID, String.valueOf(messageContent), timestamp, false, temp.getFirstName() + " " + temp.getLastName(), "received message");
+            // Broadcast the update message
+            Intent updateIntent = new Intent("com.example.mobile_project.SMS_UPDATED");
+            updateIntent.setPackage(context.getPackageName());
+            context.sendBroadcast(updateIntent);
         }
 
     }
+
 }

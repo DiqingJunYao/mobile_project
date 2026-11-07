@@ -13,7 +13,7 @@ import java.util.ArrayList;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     public static final String DATABASE_NAME = "Contacts.db";
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 3;
     public static final String TABLE_NAME_CONTACTS = "contacts";
     public static final String CONTACT_COLUMN_ID = "id";
     public static final String CONTACT_COLUMN_FIRST_NAME = "first_name";
@@ -31,8 +31,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String MESSAGE_COLUMN_IS_SENT = "is_sent";
     public static final String MESSAGE_COLUMN_CONTACT_NAME = "contact_name";
     public static final String MESSAGE_COLUMN_MESSAGE_STATUS = "message_status";
-
-
+    public static final String TABLE_NAME_MULTIPART_MESSAGES = "multipart_messages";
+    public static final String MULTIPART_MESSAGE_COLUMN_MESSAGE_ID = "id";
+    public static final String MULTIPART_MESSAGE_COLUMN_PART_INDEX = "part_index";
+    public static final String MULTIPART_MESSAGE_COLUMN_PART_STATUS = "part_status";
 
 
     public DatabaseHelper(@Nullable Context context) {
@@ -61,9 +63,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 MESSAGE_COLUMN_CONTACT_NAME + " TEXT NOT NULL," +
                 MESSAGE_COLUMN_MESSAGE_STATUS + " TEXT NOT NULL," +
                 "FOREIGN KEY(" + MESSAGE_COLUMN_CONTACT_ID + ") REFERENCES " +
-                TABLE_NAME_CONTACTS + "(" + CONTACT_COLUMN_ID + ")" +
+                TABLE_NAME_CONTACTS + "(" + CONTACT_COLUMN_ID + ")" + " ON DELETE CASCADE" +
                 ")";
         db.execSQL(createMessagesTable);
+        String createMultipartMessagesTable = "CREATE TABLE " + TABLE_NAME_MULTIPART_MESSAGES + "(" +
+                MULTIPART_MESSAGE_COLUMN_MESSAGE_ID + " INTEGER NOT NULL," +
+                MULTIPART_MESSAGE_COLUMN_PART_INDEX + " INTEGER NOT NULL," +
+                MULTIPART_MESSAGE_COLUMN_PART_STATUS + " TEXT NOT NULL," +
+                "PRIMARY KEY (" + MULTIPART_MESSAGE_COLUMN_MESSAGE_ID + ", " + MULTIPART_MESSAGE_COLUMN_PART_INDEX + "), " +
+                "FOREIGN KEY(" + MULTIPART_MESSAGE_COLUMN_MESSAGE_ID + ") REFERENCES " +
+                TABLE_NAME_MESSAGES + "(" + MESSAGE_COLUMN_ID + ")" + " ON DELETE CASCADE" +
+                ")";
+        db.execSQL(createMultipartMessagesTable);
     }
 
     @Override
@@ -102,7 +113,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String query = "SELECT * FROM contacts";
         android.database.Cursor cursor = db.rawQuery(query, null);
         while (cursor.moveToNext()) {
-            int id = cursor.getInt(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_ID));
             String firstName = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_FIRST_NAME));
             String lastName = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_LAST_NAME));
             String countryCode = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_COUNTRY_CODE));
@@ -153,6 +163,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String avatar = cursor.getString(cursor.getColumnIndexOrThrow(CONTACT_COLUMN_AVATAR));
             contact = new Contact(firstName, lastName, nickname, countryCode1, phone, email, avatar);
         }
+        cursor.close();
+        db.close();
         return contact;
     }
 
@@ -197,7 +209,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         String query = "SELECT * FROM messages WHERE contact_id = ?";
         android.database.Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(contactId)});
         while (cursor.moveToNext()) {
-            long id = cursor.getLong(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_ID));
             String content = cursor.getString(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_CONTENT));
             long timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_TIMESTAMP));
             boolean isSent = cursor.getInt(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_IS_SENT)) == 1;
@@ -211,30 +222,25 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         return messages;
     }
 
-    public void insertMessage(long contactId, String content, long timestamp, boolean isSent, String contactName, String messageStatus) {
+    public long insertMessage(long contactId, String content, long timestamp, boolean isSent, String contactName, String messageStatus
+    ) {
         SQLiteDatabase db = getWritableDatabase();
-        String query = "INSERT INTO messages (contact_id, content, timestamp, is_sent, contact_name, message_status) VALUES (?, ?, ?, ?, ?, ?)";
-        db.execSQL(query, new String[]{String.valueOf(contactId), content, String.valueOf(timestamp), String.valueOf(isSent ? 1 : 0), contactName, messageStatus});
+        ContentValues values = new ContentValues();
+        values.put(MESSAGE_COLUMN_CONTACT_ID, contactId);
+        values.put(MESSAGE_COLUMN_CONTENT, content);
+        values.put(MESSAGE_COLUMN_TIMESTAMP, timestamp);
+        values.put(MESSAGE_COLUMN_IS_SENT, isSent ? 1 : 0);
+        values.put(MESSAGE_COLUMN_CONTACT_NAME, contactName);
+        values.put(MESSAGE_COLUMN_MESSAGE_STATUS, messageStatus);
+        long messageId = db.insert(TABLE_NAME_MESSAGES, null, values);
         db.close();
-    }
-
-    public int getMessageIdByContactIdTimestamp(long contactId, long timestamp) {
-        SQLiteDatabase db = getReadableDatabase();
-        String query = "SELECT id FROM messages WHERE contact_id = ? AND timestamp = ?";
-        android.database.Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(contactId), String.valueOf(timestamp)});
-        int id = -1;
-        if (cursor.moveToFirst()) {
-            id = cursor.getInt(cursor.getColumnIndexOrThrow(MESSAGE_COLUMN_ID));
-        }
-        cursor.close();
-        db.close();
-        return id;
+        return messageId;
     }
 
     public void updateMessageStatus(long messageId, String newStatus) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put("status", newStatus);
+        values.put("message_status", newStatus);
         int rowsAffected = db.update(
                 "messages",
                 values,
@@ -242,5 +248,78 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 new String[]{String.valueOf(messageId)}
         );
         Log.d("DATABASE", "Updated rows: " + rowsAffected);
+    }
+
+    public long insertMultipartMessage(long messageId, int partIndex, String partStatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("id", messageId);
+        values.put("part_index", partIndex);
+        values.put("part_status", partStatus);
+        long result = db.insert("multipart_messages", null, values);
+        db.close();
+        Log.d("DATABASE", "Inserted row: " + result);
+        return result;
+    }
+    public long updateMultipartMessageStatus(long messageId, int partIndex, String newStatus) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("part_status", newStatus);
+        int rowsAffected = db.update(
+                "multipart_messages",
+                values,
+                "id = ? AND part_index = ?",
+                new String[]{String.valueOf(messageId), String.valueOf(partIndex)}
+        );
+        db.close();
+        Log.d("DATABASE", "Updated rows: " + rowsAffected);
+        return rowsAffected;
+    }
+    public boolean checkMultipartInserted(long messageId, int totalParts) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT COUNT(*) FROM multipart_messages WHERE id = ?";
+        android.database.Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(messageId)});
+        cursor.moveToFirst();
+        int count = cursor.getInt(0);
+        cursor.close();
+        db.close();
+        return count == totalParts;
+    }
+    public void updateOverallMessages(long messageId) {
+        String query =
+                "SELECT " + "COUNT(*) AS total, " +
+                        "SUM(CASE WHEN part_status = 'sent' THEN 1 ELSE 0 END) AS sent_count, " +
+                        "SUM(CASE WHEN part_status = 'failed' THEN 1 ELSE 0 END) AS failed_count " +
+                        "FROM multipart_messages WHERE id = ?";
+        try (SQLiteDatabase db = getWritableDatabase(); android.database.Cursor cursor = db.rawQuery(query, new String[]{String.valueOf(messageId)})) {
+            if (!cursor.moveToFirst()) {
+                return;
+            }
+
+            int total = cursor.getInt(0);
+            int sentCount = cursor.getInt(1);
+            int failedCount = cursor.getInt(2);
+
+            String status;
+            if (total == 0) {
+                return;
+            } else if (failedCount > 0) {
+                status = "failed";
+            } else if (sentCount == total) {
+                status = "sent";
+            } else {
+                status = "pending";
+            }
+
+            ContentValues values = new ContentValues();
+            values.put(MESSAGE_COLUMN_MESSAGE_STATUS, status);
+            db.update(
+                    TABLE_NAME_MESSAGES,
+                    values,
+                    MESSAGE_COLUMN_ID + " = ?",
+                    new String[]{String.valueOf(messageId)}
+            );
+            Log.d("DATABASE", "Message " + messageId + " status: " + status);
+        }
     }
 }

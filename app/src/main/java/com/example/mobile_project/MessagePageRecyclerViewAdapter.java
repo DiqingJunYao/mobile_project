@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -13,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
 
 public class MessagePageRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     Context context;
@@ -60,6 +62,13 @@ public class MessagePageRecyclerViewAdapter extends RecyclerView.Adapter<Recycle
         } else if (holder instanceof MyViewHolderOut) {
             ((MyViewHolderOut) holder).content.setText(messages.get(position).getContent());
             ((MyViewHolderOut) holder).timeStamp.setText(time);
+            if (Objects.equals(messages.get(position).getMessageStatus(), "pending")) {
+                ((MyViewHolderOut) holder).imageView.setImageResource(R.drawable.message_pending_clock_fixed);
+            } else if (Objects.equals(messages.get(position).getMessageStatus(), "sent")) {
+                ((MyViewHolderOut) holder).imageView.setImageResource(R.drawable.message_sent_tick_fixed);
+            } else {
+                ((MyViewHolderOut) holder).imageView.setImageResource(R.drawable.message_failed_exclamation);
+            }
         }
     }
 
@@ -82,11 +91,14 @@ public class MessagePageRecyclerViewAdapter extends RecyclerView.Adapter<Recycle
     public static class MyViewHolderOut extends RecyclerView.ViewHolder {
         TextView content;
         TextView timeStamp;
+        ImageView imageView;
+
 
         public MyViewHolderOut(@NonNull View itemViewOut) {
             super(itemViewOut);
             content = itemViewOut.findViewById(R.id.textContentOut);
             timeStamp = itemViewOut.findViewById(R.id.textTimeOut);
+            imageView = itemViewOut.findViewById(R.id.messageStatus);
         }
     }
 }
