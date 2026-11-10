@@ -2,21 +2,25 @@ package com.example.mobile_project;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.annotation.SuppressLint;
 import android.widget.PopupMenu;
+import android.widget.SeekBar;
 
 import java.util.ArrayList;
 
@@ -61,39 +65,7 @@ public class MainActivity extends Activity implements RecyclerViewInterface {
         View header = findViewById(R.id.header);
         HeaderColorHelper.applyColor(this, header);
         menuButton.setOnClickListener(v -> {
-            PopupMenu popupMenu = new PopupMenu(this, menuButton);
-            popupMenu.getMenuInflater().inflate(
-                    R.menu.header_color_menu,
-                    popupMenu.getMenu()
-            );
-
-            popupMenu.setOnMenuItemClickListener(item -> {
-                int itemId = item.getItemId();
-                String selectedColor;
-                if (itemId == R.id.color_default) {
-                    selectedColor = "default";
-                } else if (itemId == R.id.color_blue) {
-                    selectedColor = "blue";
-                } else if (itemId == R.id.color_green) {
-                    selectedColor = "green";
-                } else if (itemId == R.id.color_red) {
-                    selectedColor = "red";
-                } else if (itemId == R.id.color_purple) {
-                    selectedColor = "purple";
-                } else {
-                    return false;
-                }
-                HeaderColorHelper.saveColor(
-                        MainActivity.this,
-                        selectedColor
-                );
-                HeaderColorHelper.applyColor(
-                        MainActivity.this,
-                        header
-                );
-                return true;
-            });
-            popupMenu.show();
+            HeaderColorHelper.showColorPicker(this, header);
         });
     }
 
