@@ -117,6 +117,11 @@ public class AddContactActivity extends Activity {
                 String countryCode = selectCountryNumber.getText().toString();
                 String phoneNumber = inputPhoneNumber.getText().toString();
 
+                if (countryCode.isEmpty() || phoneNumber.isEmpty()) {
+                    Log.e("AddContactActivity", "Missing country code or phone number");
+                    return;
+                }
+
                 String avatarFilename = avatar;
                 if (selectedAvatarUri != null) {
                     avatarFilename = saveAvatar(selectedAvatarUri);
@@ -182,6 +187,11 @@ public class AddContactActivity extends Activity {
                 String nickname = inputNickname.getText().toString();
                 String countryCode = selectCountryNumber.getText().toString();
                 String phoneNumber = inputPhoneNumber.getText().toString();
+
+                if (countryCode.isEmpty() || phoneNumber.isEmpty()) {
+                    Log.e("AddContactActivity", "Missing country code or phone number");
+                    return;
+                }
 
                 String avatarFilename = null;
                 if (selectedAvatarUri != null) {

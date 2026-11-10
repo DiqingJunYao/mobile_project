@@ -12,6 +12,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="30dp"
+        android:background="@drawable/background6"
         android:text="@string/aac_backButton" />
 
     <ScrollView
@@ -42,6 +43,7 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:textSize="20sp"
+                    android:textColor="@color/white"
                     android:text="@string/aac_textView" />
 
                 <ImageView
@@ -105,6 +107,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:hint="@string/aac_selectCountryNumber_hint"
+                    android:background="@drawable/background6"
                     android:textColorHint="@color/white"
                     android:textSize="20sp" />
 
@@ -126,6 +129,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:background="@drawable/background6"
                 android:text="@string/aac_addContactButton" />
 
         </LinearLayout>

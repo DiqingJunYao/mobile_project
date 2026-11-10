@@ -2,6 +2,7 @@ package com.example.mobile_project;
 
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,9 +71,13 @@ public class OutlineListAdapter extends BaseAdapter {
         Contact contact = getItem(position);
 
         // Full name.
-        String name = contact.getFirstName() + " "
-                + contact.getLastName();
-        holder.title.setText(name);
+        String name = contact.getFirstName() + " " + contact.getLastName();
+        if (name.trim().isEmpty()) {
+            String phoneNumber = contact.getCountryCode() + contact.getPhone();
+            holder.title.setText(phoneNumber);
+        } else {
+            holder.title.setText(name.trim());
+        }
 
         // Nickname.
         holder.detail.setText(contact.getNickName());
