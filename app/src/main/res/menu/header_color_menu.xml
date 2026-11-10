@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/color_default"
+        android:title="@string/hcm_color_default" />
+
+    <item
+        android:id="@+id/color_blue"
+        android:title="@string/hcm_color_blue" />
+
+    <item
+        android:id="@+id/color_green"
+        android:title="@string/hcm_color_green" />
+
+    <item
+        android:id="@+id/color_red"
+        android:title="@string/hcm_color_red" />
+
+    <item
+        android:id="@+id/color_purple"
+        android:title="@string/hcm_color_purple" />
+
+</menu>

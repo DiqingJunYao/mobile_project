@@ -21,6 +21,7 @@
             android:id="@+id/backButton"
             android:layout_width="wrap_content"
             android:layout_height="100dp"
+            android:background="@drawable/background6"
             android:text="@string/amp_backButton" />
 
         <ImageView
@@ -42,16 +43,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="25sp"
-                android:textColor="#FFFFFF" />
+                android:textColor="@color/white" />
 
             <TextView
                 android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="15sp"
-                android:textColor="#CFCFCF" />
+                android:textColor="@color/gray" />
 
         </LinearLayout>
+        <ImageButton
+            android:id="@+id/callButton"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/amp_callButton"
+            android:src="@drawable/ic_call_black"
+            android:background="@drawable/background6" />
+
 
     </LinearLayout>
 
@@ -89,6 +98,7 @@
             android:id="@+id/sendMessageButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:background="@drawable/background6"
             android:text="@string/amp_sendMessageButton" />
 
     </LinearLayout>

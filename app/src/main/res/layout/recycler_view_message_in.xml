@@ -24,14 +24,14 @@
             android:layout_weight="1"
             android:paddingStart="5dp"
             android:paddingEnd="5dp"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:textSize="20sp" />
 
         <TextView
             android:id="@+id/textTimeIn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#CFCFCF"
+            android:textColor="@color/gray"
             android:textSize="15sp" />
 
     </LinearLayout>

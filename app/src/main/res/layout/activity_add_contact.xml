@@ -60,7 +60,8 @@
                 android:layout_height="wrap_content"
                 android:inputType="textPersonName"
                 android:hint="@string/aac_inputFirstName_hint"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:textSize="20sp" />
 
             <EditText
@@ -69,7 +70,8 @@
                 android:layout_height="wrap_content"
                 android:inputType="textPersonName"
                 android:hint="@string/aac_inputLastName_hint"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:textSize="20sp" />
 
             <EditText
@@ -78,7 +80,8 @@
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress"
                 android:hint="@string/aac_inputEmail_hint"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:textSize="20sp" />
 
             <EditText
@@ -87,7 +90,8 @@
                 android:layout_height="wrap_content"
                 android:inputType="textPersonName"
                 android:hint="@string/aac_inputNickname_hint"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/white"
+                android:textColorHint="@color/white"
                 android:textSize="20sp" />
 
             <LinearLayout
@@ -101,7 +105,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:hint="@string/aac_selectCountryNumber_hint"
-                    android:textColorHint="#FFFFFF"
+                    android:textColorHint="@color/white"
                     android:textSize="20sp" />
 
                 <EditText
@@ -111,7 +115,8 @@
                     android:layout_weight="1"
                     android:inputType="phone"
                     android:hint="@string/aac_inputPhoneNumber_hint"
-                    android:textColor="#FFFFFF"
+                    android:textColor="@color/white"
+                    android:textColorHint="@color/white"
                     android:textSize="20sp" />
 
             </LinearLayout>

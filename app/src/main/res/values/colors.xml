@@ -3,4 +3,11 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="golden_yellow">#FAD01B</color>
+    <color name="gray">#CFCFCF</color>
+    <color name="gray_black">#333333</color>
+    <color name="header_blue">#2196F3</color>
+    <color name="header_green">#8BC34A</color>
+    <color name="header_red">#E91E63</color>
+    <color name="header_purple">#673AB7</color>
+    <color name="header_default">#009688</color>
 </resources>

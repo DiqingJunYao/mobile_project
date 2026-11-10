@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:paddingStart="5dp"
             android:paddingEnd="10dp"
-            android:textColor="#CFCFCF"
+            android:textColor="@color/gray"
             android:textSize="15sp" />
 
         <TextView
@@ -31,7 +31,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:textSize="20sp" />
 
         <ImageView
