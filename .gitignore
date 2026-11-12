@@ -1,0 +1,46 @@
+
+# Gradle build outputs and caches
+.gradle/
+**/build/
+
+# Local Android SDK configuration
+local.properties
+
+# Android Studio local files
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/shelf/
+.idea/caches/
+.idea/libraries/
+*.iml
+
+# Generated packages
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*~
+
+# Native build output
+.cxx/
+.externalNativeBuild/
+
+# Captures
+captures/
+
+# Signing keys
+*.jks
+*.keystore
+*.pem
+*.p12
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+secrets.properties
